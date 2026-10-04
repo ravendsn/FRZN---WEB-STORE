@@ -77,14 +77,17 @@ const P = [
 ];
 const cur = { i: 0 },
   fig = $("#fig"),
-  th = $("#th");
-const svg = (c) =>
-  `<svg viewBox="0 0 120 220" aria-hidden="true"><use href="#j"/></svg>`;
+  th = $("#th"),
+  heroImage = $("#fig image");
+const jackets = ["j1.png", "j2.png", "j3.png", "j4.png", "j5.png"];
+const jacketFor = (i) => jackets[i % jackets.length];
+const svg = (image) =>
+  `<svg viewBox="0 0 120 220" aria-hidden="true"><image href="../attachment/${image}" x="0" y="0" width="120" height="220" preserveAspectRatio="xMidYMid meet"/></svg>`;
 P.slice(0, 7).forEach((o, i) => {
   const b = document.createElement("button");
   b.style.setProperty("--c", o.x);
   b.setAttribute("aria-label", "Show " + o.n);
-  b.innerHTML = svg();
+  b.innerHTML = svg(jacketFor(i));
   b.onclick = () => show(i);
   th.append(b);
 });
@@ -94,6 +97,7 @@ function show(n) {
   setTimeout(() => {
     const o = P[n];
     fig.style.setProperty("--c", o.x);
+    heroImage.setAttribute("href", `../attachment/${jacketFor(n)}`);
     $("#hn").textContent = o.n;
     $("#hp").textContent = money(o.p);
     $("#hcol").innerHTML = o.c.map((c) => `<span>${c}</span>`).join("");
@@ -101,7 +105,10 @@ function show(n) {
     fig.classList.remove("out");
   }, 300);
   [...th.children].forEach((b, i) => b.classList.toggle("on", i === n));
-  th.style.transform = `translateX(${-Math.min(n, 5) * (th.children[0].offsetWidth + 14)}px)`;
+  const itemWidth = th.children[0].getBoundingClientRect().width + 14;
+  const visibleItems = Math.max(1, Math.floor(th.parentElement.clientWidth / itemWidth));
+  const maxOffset = Math.max(0, th.children.length - visibleItems);
+  th.style.transform = `translateX(${-Math.min(n, maxOffset) * itemWidth}px)`;
   cur.i = n;
 }
 $("#pv").onclick = () => show(cur.i - 1);
@@ -114,7 +121,7 @@ P.forEach((o, i) => {
   const a = document.createElement("article");
   a.className = "card";
   a.dataset.i = i;
-  a.innerHTML = `<a href="#new" aria-label="View ${o.n}"><div class="pn grain" style="--k:${o.x}">${svg()}<span class="qa m">Quick add</span></div></a>
+  a.innerHTML = `<a href="#new" aria-label="View ${o.n}"><div class="pn grain" style="--k:${o.x}">${svg(jacketFor(i))}<span class="qa m">Quick add</span></div></a>
 <div class="info m"><h3 class="nm">${o.n}</h3><p>${o.t}</p><div class="dots" aria-label="Available colours">${o.c.map((c) => `<span><i style="background:${CL[c]}"></i>${c}</span>`).join("")}</div><data value="${o.p}">${money(o.p)}</data></div>`;
   a.querySelector(".qa").onclick = (e) => {
     e.preventDefault();
